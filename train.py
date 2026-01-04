@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 from torch.cuda.amp import autocast, GradScaler
@@ -36,6 +37,9 @@ class Trainer:
             dropout_rate=0.4,
         ).to(self.device)
 
+        # 初始化各head的bias到目标均值（避免Softplus下输出过小）
+        self._init_head_biases()
+
         # 损失函数
         self.r2_loss = WeightedR2Loss(config.TARGET_WEIGHTS)
         self.consistency_loss = ConsistencyLoss(weight=0.15)
@@ -72,6 +76,51 @@ class Trainer:
         print(f"Train samples: {len(self.train_loader.dataset)}")
         print(f"Val samples: {len(self.val_loader.dataset)}")
         print(f"Device: {self.device}")
+    def _init_head_biases(self):
+        """Initialize last-layer biases so initial predictions have the right scale."""
+        try:
+            df = pd.read_csv(self.config.TRAIN_CSV)
+        except Exception as e:
+            print(f"Warning: bias init skipped (cannot read TRAIN_CSV): {e}")
+            return
+
+        if 'target_name' not in df.columns or 'target' not in df.columns:
+            print('Warning: bias init skipped (train.csv missing target columns)')
+            return
+
+        means = df.groupby('target_name')['target'].mean().to_dict()
+
+        for target_name in self.config.TARGET_NAMES:
+            mean_y = means.get(target_name)
+            if mean_y is None or not np.isfinite(mean_y):
+                continue
+
+            heads = getattr(self.model, 'regression_heads', None)
+            if heads is None or target_name not in heads:
+                continue
+            head = heads[target_name]
+            if head is None or len(head) == 0:
+                continue
+
+            last = head[-1]
+            if not isinstance(last, nn.Linear) or last.bias is None:
+                continue
+
+            if target_name == 'Dry_Clover_g':
+                # sigmoid(raw) * 100 ~= mean_y
+                p = float(mean_y) / 100.0
+                p = max(min(p, 1.0 - 1e-4), 1e-4)
+                raw_bias = float(np.log(p / (1.0 - p)))
+            else:
+                # softplus(raw) ~= mean_y  -> raw = log(exp(y)-1)
+                y = max(float(mean_y), 1e-3)
+                raw_bias = y if y > 20.0 else float(np.log(np.expm1(y)))
+
+            with torch.no_grad():
+                last.bias.fill_(raw_bias)
+
+        print('Initialized head biases from train target means')
+
 
     def train_epoch(self, epoch):
         """训练一个epoch"""
@@ -105,7 +154,7 @@ class Trainer:
 
             # 梯度裁剪
             self.scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
 
             self.scaler.step(self.optimizer)
             self.scaler.update()
@@ -179,6 +228,15 @@ class Trainer:
             r2 = r2_score(all_targets[target_name], all_predictions[target_name])
             individual_r2[target_name] = r2
 
+        if os.environ.get('SCIRO_DEBUG_VALIDATE', '0') == '1':
+            print('\nPred/target stats (min/mean/max):')
+            for target_name in self.config.TARGET_NAMES:
+                p = np.asarray(all_predictions[target_name], dtype=np.float32)
+                y = np.asarray(all_targets[target_name], dtype=np.float32)
+                if p.size == 0 or y.size == 0:
+                    continue
+                print(f"  {target_name:20s} pred={p.min():.3f}/{p.mean():.3f}/{p.max():.3f}  targ={y.min():.3f}/{y.mean():.3f}/{y.max():.3f}")
+
         print(f"\nValidation Results (Epoch {epoch+1}):")
         print(f"Weighted R²: {weighted_r2:.4f}")
         print("Individual R² scores:")
@@ -243,8 +301,7 @@ class Trainer:
 
             if is_best:
                 self.best_score = current_score
-                print(f"\n🎉 New best score: {self.best_score:.4f}")
-
+                print(f"\nNew best score: {self.best_score:.4f}")
             # 保存checkpoint
             self.save_checkpoint(epoch, val_metrics, is_best=is_best)
 

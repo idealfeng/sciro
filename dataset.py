@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-import cv2
+import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import KFold
@@ -151,7 +151,7 @@ def get_transforms(is_train=True, image_size=384):
     if is_train:
         return A.Compose([
             # 先处理长宽比问题（小图先pad再裁剪，避免报错）
-            A.PadIfNeeded(min_height=1000, min_width=1000, border_mode=cv2.BORDER_REFLECT_101, p=1.0),
+            A.PadIfNeeded(min_height=1000, min_width=1000, border_mode=4, p=1.0),
             A.OneOf([
                 A.RandomCrop(height=1000, width=1000, p=0.3),
                 A.CenterCrop(height=1000, width=1000, p=0.7),
@@ -187,7 +187,7 @@ def get_transforms(is_train=True, image_size=384):
         ])
     else:
         return A.Compose([
-            A.PadIfNeeded(min_height=1000, min_width=1000, border_mode=cv2.BORDER_REFLECT_101, p=1.0),
+            A.PadIfNeeded(min_height=1000, min_width=1000, border_mode=4, p=1.0),
             A.CenterCrop(height=1000, width=1000),
             A.Resize(image_size, image_size),
             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),

@@ -75,7 +75,7 @@ class WeightedR2Loss(torch.nn.Module):
             targets['Dry_Clover_g'],
         )
 
-        return r2_loss + 0.1 * clover_mse
+        return r2_loss + 0.01 * clover_mse
 
     def _compute_r2_loss(self, predictions, targets):
         # 展平

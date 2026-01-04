@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import timm
 
 class BiomassPredictor(nn.Module):
@@ -107,7 +108,7 @@ class BiomassPredictor(nn.Module):
                 pred = torch.sigmoid(pred) * 100.0  # 压缩到0-100范围
             else:
                 # 确保非负（生物量不能为负）
-                pred = torch.relu(pred)
+                pred = F.softplus(pred)
 
             predictions[target_name] = pred
         
