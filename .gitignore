@@ -1,0 +1,29 @@
+# data / outputs
+data/
+data_full/
+output/
+*.zip
+
+# model artifacts
+*.pth
+*.pt
+*.ckpt
+*.onnx
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# notebooks
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

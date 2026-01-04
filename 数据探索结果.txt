@@ -1,0 +1,176 @@
+(torch312) PS D:\Paper\kaggle\sciro> python eda.py
+======================================================================
+DATA EXPLORATION
+======================================================================
+
+1. BASIC INFO
+----------------------------------------------------------------------
+Train samples: 1785
+Test samples: 5
+Train images: 357
+Test images: 1
+
+2. MISSING VALUES
+----------------------------------------------------------------------
+sample_id        0
+image_path       0
+Sampling_Date    0
+State            0
+Species          0
+Pre_GSHH_NDVI    0
+Height_Ave_cm    0
+target_name      0
+target           0
+dtype: int64
+
+3. TARGET DISTRIBUTIONS
+----------------------------------------------------------------------
+
+Dry_Green_g:
+  Mean: 26.62
+  Std:  25.40
+  Min:  0.00
+  Max:  157.98
+  Median: 20.80
+
+Dry_Dead_g:
+  Mean: 12.04
+  Std:  12.40
+  Min:  0.00
+  Max:  83.84
+  Median: 7.98
+
+Dry_Clover_g:
+  Mean: 6.65
+  Std:  12.12
+  Min:  0.00
+  Max:  71.79
+  Median: 1.42
+
+GDM_g:
+  Mean: 33.27
+  Std:  24.94
+  Min:  1.04
+  Max:  157.98
+  Median: 27.11
+
+Dry_Total_g:
+  Mean: 45.32
+  Std:  27.98
+  Min:  1.04
+  Max:  185.70
+  Median: 40.30
+
+4. FEATURE DISTRIBUTIONS
+----------------------------------------------------------------------
+
+NDVI:
+  Mean: 0.657
+  Std:  0.152
+  Min:  0.160
+  Max:  0.910
+
+Height (cm):
+  Mean: 7.60
+  Std:  10.29
+  Min:  1.00
+  Max:  70.00
+
+State distribution:
+State
+Tas    138
+Vic    112
+NSW     75
+WA      32
+Name: count, dtype: int64
+
+Species distribution:
+Species
+Ryegrass_Clover                                                98
+Ryegrass                                                       62
+Phalaris_Clover                                                42
+Clover                                                         41
+Fescue                                                         28
+Lucerne                                                        22
+Phalaris_BarleyGrass_SilverGrass_SpearGrass_Clover_Capeweed    11
+Fescue_CrumbWeed                                               10
+WhiteClover                                                    10
+Phalaris                                                        8
+Phalaris_Ryegrass_Clover                                        8
+Phalaris_Clover_Ryegrass_Barleygrass_Bromegrass                 7
+SubcloverLosa                                                   5
+SubcloverDalkeith                                               3
+Mixed                                                           2
+Name: count, dtype: int64
+D:\Paper\kaggle\sciro\eda.py:79: SettingWithCopyWarning:
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  img_df["Sampling_Date"] = pd.to_datetime(img_df["Sampling_Date"])
+
+Date range:
+  From: 2015-01-15 00:00:00
+  To:   2015-11-10 00:00:00
+
+Year distribution:
+Sampling_Date
+2015    357
+Name: count, dtype: int64
+
+Month distribution:
+Sampling_Date
+1     17
+2     24
+4     10
+5     42
+6     53
+7     41
+8     37
+9     67
+10    29
+11    37
+Name: count, dtype: int64
+
+5. PHYSICAL CONSISTENCY CHECK
+----------------------------------------------------------------------
+Dry_Total vs Sum(Green+Dead+Clover) difference:
+  Mean abs diff: 0.00g
+  Max abs diff:  0.31g
+  % with diff < 1g: 100.0%
+
+6. SAMPLE IMAGES
+----------------------------------------------------------------------
+
+train/ID307060225.jpg:
+  Size: (2000, 1000)
+  Mode: RGB
+  NDVI: 0.530
+  Height: 2.0cm
+  State: Tas
+  Species: Ryegrass_Clover
+  Date: 2015-06-26 00:00:00
+
+train/ID1199150612.jpg:
+  Size: (2000, 1000)
+  Mode: RGB
+  NDVI: 0.620
+  Height: 5.5cm
+  State: Tas
+  Species: Ryegrass_Clover
+  Date: 2015-11-10 00:00:00
+
+train/ID668330410.jpg:
+  Size: (2000, 1000)
+  Mode: RGB
+  NDVI: 0.820
+  Height: 5.3cm
+  State: Tas
+  Species: Ryegrass
+  Date: 2015-09-11 00:00:00
+
+======================================================================
+EXPLORATION COMPLETED
+======================================================================
+
+(torch312) PS D:\Paper\kaggle\sciro> 
