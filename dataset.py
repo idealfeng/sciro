@@ -41,9 +41,23 @@ class BiomassDataset(Dataset):
         img_df["image_id"] = img_df["image_path"].apply(
             lambda x: x.split("/")[-1].replace(".jpg", "")
         )
+        # test.csv 只有 [sample_id, image_path, target_name]，没有表格特征；这里做兜底，保证推理可跑通
+        if 'Sampling_Date' not in img_df.columns:
+            img_df['Sampling_Date'] = pd.Timestamp('1970-01-01')
+        img_df['Sampling_Date'] = pd.to_datetime(img_df['Sampling_Date'], errors='coerce').fillna(pd.Timestamp('1970-01-01'))
+
+        for col in ['State', 'Species']:
+            if col not in img_df.columns:
+                img_df[col] = 'Unknown'
+            img_df[col] = img_df[col].fillna('Unknown').astype(str)
+
+        for col in ['Pre_GSHH_NDVI', 'Height_Ave_cm']:
+            if col not in img_df.columns:
+                img_df[col] = 0.0
+            img_df[col] = pd.to_numeric(img_df[col], errors='coerce').fillna(0.0).astype(float)
+
 
         # 日期特征
-        img_df["Sampling_Date"] = pd.to_datetime(img_df["Sampling_Date"])
         img_df["year"] = img_df["Sampling_Date"].dt.year
         img_df["month"] = img_df["Sampling_Date"].dt.month
         img_df["day_of_year"] = img_df["Sampling_Date"].dt.dayofyear
